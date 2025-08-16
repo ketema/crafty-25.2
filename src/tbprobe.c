@@ -107,9 +107,15 @@ unsigned TB_LARGEST = 0;
 #define file(s)                 ((s) & 0x07)
 #define board(s)                ((uint64_t)1 << (s))
 static inline unsigned _lsb(uint64_t b) {
+#if defined(__aarch64__) || defined(__arm64__)
+  /* ARM64 implementation using builtin */
+  return __builtin_ctzll(b);
+#else
+  /* x86_64 implementation */
   size_t idx;
-__asm__("bsfq %1, %0": "=r"(idx):"rm"(b));
+  __asm__("bsfq %1, %0": "=r"(idx):"rm"(b));
   return idx;
+#endif
 }
 
 #define square(r, f)            (8 * (r) + (f))

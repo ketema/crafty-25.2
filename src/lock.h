@@ -41,6 +41,32 @@ void Pause() {
  *                                                                             *
  *******************************************************************************
  */
+#if defined(__aarch64__) || defined(__arm64__)
+/* ARM64 implementation using C11 atomics */
+#include <stdatomic.h>
+static void __inline__ LockARM64(volatile int *lock) {
+  int expected = 0;
+  while (!atomic_compare_exchange_weak((atomic_int*)lock, &expected, 1)) {
+    expected = 0;
+    while (atomic_load((atomic_int*)lock) != 0) {
+      /* ARM64 yield instruction */
+      asm __volatile__("yield" ::: "memory");
+    }
+  }
+}
+static void __inline__ Pause() {
+  asm __volatile__("yield" ::: "memory");
+}
+static void __inline__ UnlockARM64(volatile int *lock) {
+  atomic_store((atomic_int*)lock, 0);
+}
+#    define LockInit(p)           (p=0)
+#    define LockFree(p)           (p=0)
+#    define Unlock(p)             (UnlockARM64(&p))
+#    define Lock(p)               (LockARM64(&p))
+#    define lock_t                volatile int
+#else
+/* x86_64 implementation */
 static void __inline__ LockX86(volatile int *lock) {
   int dummy;
   asm __volatile__(
@@ -69,12 +95,13 @@ static void __inline__ UnlockX86(volatile int *lock) {
       :"q"(lock)
       :"memory");
 }
-
 #    define LockInit(p)           (p=0)
 #    define LockFree(p)           (p=0)
 #    define Unlock(p)             (UnlockX86(&p))
 #    define Lock(p)               (LockX86(&p))
 #    define lock_t                volatile int
+#endif
+
 #  endif
 #else
 #  define LockInit(p)

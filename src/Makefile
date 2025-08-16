@@ -81,6 +81,14 @@ quick:
 		LDFLAGS='$(LDFLAGS) -lstdc++' \
 		crafty-make
 
+unix-clang-arm64:
+	$(MAKE) target=UNIX \
+		CC=clang \
+ 		opt='-DSYZYGY -DTEST -DTRACE -DCPUS=4 -DUNIX' \
+		CFLAGS='-Wall -Wno-array-bounds -pipe -O3 -mcpu=apple-m1' \
+		LDFLAGS='$(LDFLAGS) -lstdc++' \
+		crafty-make
+
 unix-gcc:
 	$(MAKE) -j target=UNIX \
 		CC=gcc \
