@@ -1,0 +1,6 @@
+# Build artifacts
+src/crafty
+src/*.o
+src/game.*
+src/log.*
+.DS_Store
